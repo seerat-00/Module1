@@ -1,0 +1,77 @@
+
+#define PIR_PIN 2        
+#define TRIG_PIN 4       
+#define ECHO_PIN 5      
+#define RED_LED 13        
+#define GREEN_LED 11     
+#define IR_LED 3        
+#define IR_SENSOR 9     
+
+bool motionDetect = false;
+
+void handleMotion() {
+  motionDetect = true;  
+}
+
+void setup() {
+  pinMode(PIR_PIN, INPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(IR_LED, OUTPUT);
+  pinMode(IR_SENSOR, INPUT);
+
+  Serial.begin(9600);
+
+  attachInterrupt(digitalPinToInterrupt(PIR_PIN), handleMotion, RISING);
+}
+
+long getDistance() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  long distance = duration * 0.0343 / 2;  
+  
+  return (distance > 0 && distance < 400) ? distance : -1; 
+}
+
+void loop() {
+  long distance = getDistance();
+  int irValue = digitalRead(IR_SENSOR);
+
+  if (distance != -1) {
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.println(" cm");
+
+    if (distance < 80) {
+      digitalWrite(GREEN_LED, HIGH);
+    } else {
+      digitalWrite(GREEN_LED, LOW);
+    }
+  } else {
+    Serial.println("Invalid distance measurement");
+  }
+
+  if (motionDetect) {
+    Serial.println("Motion detected!");
+    digitalWrite(RED_LED, HIGH);  
+    delay(1000);
+    digitalWrite(RED_LED, LOW);
+    motionDetect = false;  
+  }
+
+  if (irValue == LOW) { 
+    Serial.println("IR Sensor: Object detected!");
+    digitalWrite(RED_LED, HIGH);
+    delay(500);
+    digitalWrite(RED_LED, LOW);
+  }
+
+  delay(500);  
+}
