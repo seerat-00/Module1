@@ -1,14 +1,13 @@
-
 #define PIR_PIN 2        
 #define TRIG_PIN 4       
 #define ECHO_PIN 5      
 #define RED_LED 13        
-#define GREEN_LED 9     
+#define GREEN_LED 11     
 
-bool motionDetect = false;
+volatile bool motionDetected = false;
 
 void handleMotion() {
-  motionDetect = true;  
+  motionDetected = true;  
 }
 
 void setup() {
@@ -27,14 +26,17 @@ void loop() {
   long duration;
   int distance;
 
+
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
+
   duration = pulseIn(ECHO_PIN, HIGH);
-  distance = duration * 0.0343 / 2;  
+
+  distance = duration * 0.0343 / 2;
 
   Serial.print("Distance: ");
   Serial.print(distance);
@@ -46,15 +48,13 @@ void loop() {
     digitalWrite(GREEN_LED, LOW);
   }
 
-  if (motionDetect) {
+  if (motionDetected) {
     Serial.println("Motion detected!");
-    digitalWrite(RED_LED, HIGH);  
-    delay(1000);
+    digitalWrite(RED_LED, HIGH);
+    delay(5000); 
     digitalWrite(RED_LED, LOW);
-    motionDetect = false;  
+    motionDetected = false; 
   }
 
-  delay(1000);  
+  delay(1500);  
 }
-
-
