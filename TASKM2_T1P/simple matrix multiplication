@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstdlib>
 #include <chrono>
+#include <fstream>
 
 #define N 3
 
@@ -27,6 +28,7 @@ void multiplyMatrices(const vector<vector<int>>& A, const vector<vector<int>>& B
     }
 }
 
+// Function to print a matrix
 void printMatrix(const vector<vector<int>>& matrix) {
     for (const auto& row : matrix) {
         for (const auto& element : row) {
@@ -36,8 +38,23 @@ void printMatrix(const vector<vector<int>>& matrix) {
     }
 }
 
+void writeMatrixToFile(const string& filename, const vector<vector<int>>& matrix) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (const auto& row : matrix) {
+            for (const auto& element : row) {
+                file << element << " ";
+            }
+            file << endl;
+        }
+        file.close();
+    } else {
+        cerr << "Error: Unable to open file for writing!" << endl;
+    }
+}
+
 int main() {
-    srand(42); 
+    srand(time(0)); 
 
     vector<vector<int>> A(N, vector<int>(N));
     vector<vector<int>> B(N, vector<int>(N));
@@ -52,16 +69,18 @@ int main() {
 
     auto duration = duration_cast<microseconds>(stop - start); 
 
-    cout << "Matrix A:" << endl;
+    
+    cout << "\nMatrix A:\n";
     printMatrix(A);
-
-    cout << "\nMatrix B:" << endl;
+    cout << "\nMatrix B:\n";
     printMatrix(B);
-
-    cout << "\nResult Matrix C (A * B):" << endl;
+    cout << "\nResult Matrix C (A * B):\n";
     printMatrix(C);
+    
+    writeMatrixToFile("matrix_output.txt", C);
 
     cout << "\nTime taken for matrix multiplication: " << duration.count() << " microseconds" << endl;
+    cout << "Result saved to 'matrix_output.txt'" << endl;
 
     return 0;
 }
