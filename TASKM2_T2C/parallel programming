@@ -1,0 +1,79 @@
+#include <iostream>
+#include <vector>
+#include <chrono>
+#include <omp.h>
+#include <cstdlib>  
+#include <ctime>   
+
+using namespace std;
+using namespace std::chrono;
+
+int partition(vector<int> &vec, int low, int high) {
+    int pivot = vec[high];
+    int i = (low - 1);
+
+    for (int j = low; j <= high - 1; j++) {
+        if (vec[j] <= pivot) {
+            i++;
+            swap(vec[i], vec[j]);
+        }
+    }
+    swap(vec[i + 1], vec[high]);
+    return (i + 1);
+}
+
+void parallelQuickSort(vector<int> &vec, int low, int high) {
+    if (low < high) {
+        int pi = partition(vec, low, high);
+
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            parallelQuickSort(vec, low, pi - 1);
+
+            #pragma omp section
+            parallelQuickSort(vec, pi + 1, high);
+        }
+    }
+}
+
+int main() {
+    int n;
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    vector<int> vec(n);
+    srand(time(0)); 
+
+    for (int &num : vec) {
+        num = rand() % 1000; 
+    }
+
+    cout << "Unsorted array: ";
+    for (int num : vec) {
+        cout << num << " ";
+    }
+    cout << endl;
+
+ 
+    auto start = high_resolution_clock::now();
+
+    #pragma omp parallel
+    {
+        #pragma omp single
+        parallelQuickSort(vec, 0, n - 1);
+    }
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "Sorted array: ";
+    for (int num : vec) {
+        cout << num << " ";
+    }
+    cout << endl;
+
+    cout << "Parallel Execution Time: " << duration.count() << " microseconds" << endl;
+
+    return 0;
+}
