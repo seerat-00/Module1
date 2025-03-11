@@ -1,0 +1,112 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <pthread.h>
+#include <chrono>
+#include <fstream>
+
+#define N 3 
+#define NUM_THREADS N
+
+using namespace std;
+using namespace std::chrono;
+
+vector<vector<int>> A(N, vector<int>(N));
+vector<vector<int>> B(N, vector<int>(N));
+vector<vector<int>> C(N, vector<int>(N));
+
+struct ThreadData {
+    int row; 
+};
+
+void initializeMatrix(vector<vector<int>>& matrix) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            matrix[i][j] = rand() % 10; 
+        }
+    }
+}
+
+
+void printMatrix(const vector<vector<int>>& matrix, const string& name) {
+    cout << name << " Matrix:" << endl;
+    for (const auto& row : matrix) {
+        for (const auto& element : row) {
+            cout << element << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+void writeMatrixToFile(const string& filename, const vector<vector<int>>& matrix) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (const auto& row : matrix) {
+            for (const auto& element : row) {
+                file << element << " ";
+            }
+            file << endl;
+        }
+        file.close();
+        cout << "Result saved to '" << filename << "'" << endl;
+    } else {
+        cerr << "Error: Unable to open file for writing!" << endl;
+    }
+}
+
+void* multiplyRow(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+    int row = data->row;
+
+    for (int j = 0; j < N; j++) {
+        C[row][j] = 0;
+        for (int k = 0; k < N; k++) {
+            C[row][j] += A[row][k] * B[k][j];
+        }
+    }
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    srand(time(0)); 
+    initializeMatrix(A);
+    initializeMatrix(B);
+
+    cout << "Input Matrices:" << endl;
+    printMatrix(A, "A");
+    printMatrix(B, "B");
+
+    pthread_t threads[NUM_THREADS];
+    ThreadData threadData[NUM_THREADS];
+
+    auto start = high_resolution_clock::now(); 
+
+    
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threadData[i].row = i;
+        if (pthread_create(&threads[i], NULL, multiplyRow, (void*)&threadData[i]) != 0) {
+            cerr << "Error: Failed to create thread " << i << endl;
+            return 1; 
+        }
+    }
+
+    
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    auto stop = high_resolution_clock::now(); 
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "Result Matrix C:" << endl;
+    printMatrix(C, "C");
+
+    writeMatrixToFile("matrix_output.txt", C);
+
+    cout << "Parallel matrix multiplication completed." << endl;
+    cout << "Time taken: " << duration.count() << " microseconds" << endl;
+
+    return 0;
+}
