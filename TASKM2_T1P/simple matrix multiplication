@@ -1,15 +1,17 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <chrono>
 
 #define N 3
 
 using namespace std;
+using namespace std::chrono;
 
 void initializeMatrix(vector<vector<int>>& matrix) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            matrix[i][j] = rand() % 10; // Random values between 0 and 9
+            matrix[i][j] = rand() % 10; 
         }
     }
 }
@@ -36,23 +38,30 @@ void printMatrix(const vector<vector<int>>& matrix) {
 
 int main() {
     srand(42); 
+
     vector<vector<int>> A(N, vector<int>(N));
     vector<vector<int>> B(N, vector<int>(N));
     vector<vector<int>> C(N, vector<int>(N));
 
     initializeMatrix(A);
     initializeMatrix(B);
-    
+
+    auto start = high_resolution_clock::now(); 
     multiplyMatrices(A, B, C);
+    auto stop = high_resolution_clock::now(); 
+
+    auto duration = duration_cast<microseconds>(stop - start); 
 
     cout << "Matrix A:" << endl;
     printMatrix(A);
-    
+
     cout << "\nMatrix B:" << endl;
     printMatrix(B);
 
-    cout << "\nResultant Matrix C (A * B):" << endl;
+    cout << "\nResult Matrix C (A * B):" << endl;
     printMatrix(C);
+
+    cout << "\nTime taken for matrix multiplication: " << duration.count() << " microseconds" << endl;
 
     return 0;
 }
