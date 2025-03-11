@@ -1,0 +1,95 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <cstdlib>
+
+#ifdef _OPENMP
+    #include <omp.h> 
+#else
+    #define omp_get_thread_num() 0
+    #define omp_get_wtime() 0
+#endif
+
+#define N 3 
+using namespace std;
+
+
+void initializeMatrix(vector<vector<int>>& matrix) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            matrix[i][j] = rand() % 10; 
+        }
+    }
+}
+
+
+void multiplyMatrices(const vector<vector<int>>& A, const vector<vector<int>>& B, vector<vector<int>>& C) {
+    #ifdef _OPENMP
+    #pragma omp parallel for collapse(2)
+    #endif
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            C[i][j] = 0;
+            int thread_id = omp_get_thread_num(); 
+            for (int k = 0; k < N; k++) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+            cout << "Thread " << thread_id << " computed C[" << i << "][" << j << "] = " << C[i][j] << endl;
+        }
+    }
+}
+
+void writeMatrixToFile(const string& filename, const vector<vector<int>>& matrix) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (const auto& row : matrix) {
+            for (const auto& element : row) {
+                file << element << " ";
+            }
+            file << endl;
+        }
+        file.close();
+    } else {
+        cerr << "Error opening file!" << endl;
+    }
+}
+
+void printMatrix(const vector<vector<int>>& matrix) {
+    for (const auto& row : matrix) {
+        for (const auto& element : row) {
+            cout << element << " ";
+        }
+        cout << endl;
+    }
+}
+
+int main() {
+    srand(42); 
+
+    vector<vector<int>> A(N, vector<int>(N));
+    vector<vector<int>> B(N, vector<int>(N));
+    vector<vector<int>> C(N, vector<int>(N));
+
+    initializeMatrix(A);
+    initializeMatrix(B);
+    
+    double start = omp_get_wtime(); 
+    multiplyMatrices(A, B, C);
+    double stop = omp_get_wtime();
+
+    double duration = (stop - start) * 1e6; 
+    
+    writeMatrixToFile("matrix_output.txt", C);
+    
+    cout << "\nMatrix A:" << endl;
+    printMatrix(A);
+    cout << "\nMatrix B:" << endl;
+    printMatrix(B);
+    cout << "\nResult Matrix C:" << endl;
+    printMatrix(C);
+
+    cout << "\nMatrix multiplication completed. Output saved to matrix_output.txt" << endl;
+    cout << "Time taken for matrix multiplication: " << duration << " microseconds" << endl;
+    
+    return 0;
+}
