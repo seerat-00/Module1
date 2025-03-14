@@ -30,7 +30,7 @@ void* addVectors(void* arg) {
 }
 
 int main() {
-    constexpr unsigned long size = 10; 
+    constexpr unsigned long size = 10000000; 
     constexpr int num_threads = 4; 
     srand(time(0)); 
 
@@ -58,18 +58,6 @@ int main() {
 
     auto stop = high_resolution_clock::now(); 
     auto duration = duration_cast<microseconds>(stop - start);
-
-    cout << "Vector 1: ";
-    for (int val : v1) cout << val << " ";
-    cout << endl;
-
-    cout << "Vector 2: ";
-    for (int val : v2) cout << val << " ";
-    cout << endl;
-
-    cout << "Sum Vector: ";
-    for (int val : v3) cout << val << " ";
-    cout << endl;
 
     cout << "Time taken by parallel function: " << duration.count() << " microseconds" << endl;
 
