@@ -1,0 +1,46 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <chrono>
+#include <omp.h>
+
+using namespace std;
+using namespace std::chrono;
+
+void randomVector(vector<int>& vec) {
+    for (int& val : vec) {
+        val = rand() % 100;
+    }
+}
+
+void openmpAddVectors(const vector<int>& v1, const vector<int>& v2, vector<int>& v3, string schedule_type, int chunk_size) {
+    #pragma omp parallel for schedule(static, chunk_size) 
+    for (size_t i = 0; i < v1.size(); i++) {
+        v3[i] = v1[i] + v2[i];
+    }
+}
+
+int main() {
+    constexpr unsigned long size = 10000000; 
+    srand(time(0)); 
+
+    vector<int> v1(size), v2(size), v3(size);
+    randomVector(v1);
+    randomVector(v2);
+
+    string schedules[] = {"static", "dynamic", "guided"};
+    int chunk_sizes[] = {1, 100, 1000, 10000};
+
+    for (const auto& schedule : schedules) {
+        for (const auto& chunk : chunk_sizes) {
+            auto start = high_resolution_clock::now();
+            openmpAddVectors(v1, v2, v3, schedule, chunk);
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(stop - start);
+
+            cout << "Schedule: " << schedule << ", Chunk Size: " << chunk << ", Time: " << duration.count() << " microseconds" << endl;
+        }
+    }
+
+    return 0;
+}
