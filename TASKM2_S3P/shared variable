@@ -1,0 +1,39 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <chrono>
+#include <omp.h>
+
+using namespace std;
+using namespace std::chrono;
+
+void randomVector(vector<int>& vec) {
+    for (int& val : vec) {
+        val = rand() % 100;
+    }
+}
+
+void openmpAddVectors(const vector<int>& v1, const vector<int>& v2, vector<int>& v3) {
+    #pragma omp parallel for default(none) shared(v1, v2, v3)
+    for (size_t i = 0; i < v1.size(); i++) {
+        v3[i] = v1[i] + v2[i];
+    }
+}
+
+int main() {
+    constexpr unsigned long size = 10000000; 
+    srand(time(0)); 
+
+    vector<int> v1(size), v2(size), v3(size);
+    randomVector(v1);
+    randomVector(v2);
+
+    auto start = high_resolution_clock::now();
+    openmpAddVectors(v1, v2, v3);
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "Time taken by OpenMP function: " << duration.count() << " microseconds" << endl;
+
+    return 0;
+}
