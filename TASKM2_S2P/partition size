@@ -1,0 +1,72 @@
+#include <iostream>
+#include <vector>
+#include <pthread.h>
+#include <cstdlib>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
+
+struct ThreadData {
+    const vector<int>* v1;
+    const vector<int>* v2;
+    vector<int>* v3;
+    int start;
+    int end;
+};
+
+void randomVector(vector<int>& vec) {
+    for (int& val : vec) {
+        val = rand() % 100;
+    }
+}
+
+void* addVectors(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+    for (int i = data->start; i < data->end; i++) {
+        (*data->v3)[i] = (*data->v1)[i] + (*data->v2)[i];
+    }
+    return nullptr;
+}
+
+void runTest(int num_threads) {
+    constexpr unsigned long size = 10000000;
+    srand(time(0));
+
+    vector<int> v1(size), v2(size), v3(size);
+    randomVector(v1);
+    randomVector(v2);
+
+    pthread_t threads[num_threads];
+    ThreadData thread_data[num_threads];
+    int chunk_size = size / num_threads;
+
+    auto start = high_resolution_clock::now();
+
+    for (int i = 0; i < num_threads; i++) {
+        thread_data[i] = {&v1, &v2, &v3, i * chunk_size, (i + 1) * chunk_size};
+        if (i == num_threads - 1) {
+            thread_data[i].end = size;
+        }
+        
+        pthread_create(&threads[i], nullptr, addVectors, &thread_data[i]);
+    }
+
+    for (int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], nullptr);
+    }
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+
+    cout << "Threads: " << num_threads << ", Time taken: " << duration.count() << " ms" << endl;
+}
+
+int main() {
+    cout << "Testing different partition sizes :" << endl;
+    runTest(10);
+    runTest(50);
+    runTest(70);
+    runTest(100);
+    return 0;
+}
