@@ -7,7 +7,7 @@
 using namespace std;
 using namespace std::chrono;
 
-unsigned long VECTOR_SIZE = 500000; 
+const int VECTOR_SIZE = 500000; 
 
 void randomVector(int* vec, int size) {
     for (int i = 0; i < size; i++) {
