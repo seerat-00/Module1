@@ -1,0 +1,88 @@
+#include <iostream>
+#include <vector>
+#include <chrono>
+#include <cstdlib>
+#include <ctime>
+#include <pthread.h>
+
+using namespace std;
+using namespace std::chrono;
+
+struct QuickSortArgs {
+    vector<int>* vec;
+    int low;
+    int high;
+};
+
+int partition(vector<int>& vec, int low, int high) {
+    int pivot = vec[high];
+    int i = (low - 1);
+    for (int j = low; j <= high - 1; j++) {
+        if (vec[j] <= pivot) {
+            i++;
+            swap(vec[i], vec[j]);
+        }
+    }
+    swap(vec[i + 1], vec[high]);
+    return (i + 1);
+}
+
+void quickSort(vector<int>& vec, int low, int high) {
+    if (low < high) {
+        int pi = partition(vec, low, high);
+        quickSort(vec, low, pi - 1);
+        quickSort(vec, pi + 1, high);
+    }
+}
+
+void* threadedQuickSort(void* arg) {
+    QuickSortArgs* args = (QuickSortArgs*)arg;
+    quickSort(*(args->vec), args->low, args->high);
+    return nullptr;
+}
+
+int main() {
+    srand(time(0));
+
+    int n;
+    cout << "Enter the number of elements: ";
+    cin >> n;
+
+    vector<int> vec(n);
+    for (int& num : vec) {
+        num = rand() % 1000 + 1;
+    }
+
+    cout << "Unsorted array (first 20): ";
+    for (int i = 0; i < min(20, n); i++) {
+        cout << vec[i] << " ";
+    }
+    cout << endl;
+
+    auto start = high_resolution_clock::now();
+
+    int pi = partition(vec, 0, n - 1);
+
+    QuickSortArgs leftArgs = { &vec, 0, pi - 1 };
+    QuickSortArgs rightArgs = { &vec, pi + 1, n - 1 };
+
+    pthread_t t1, t2;
+    pthread_create(&t1, nullptr, threadedQuickSort, &leftArgs);
+    pthread_create(&t2, nullptr, threadedQuickSort, &rightArgs);
+
+    pthread_join(t1, nullptr);
+    pthread_join(t2, nullptr);
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "Sorted array (first 20): ";
+    for (int i = 0; i < min(20, n); i++) {
+        cout << vec[i] << " ";
+    }
+    cout << endl;
+
+    cout << "Execution Time: " << duration.count() << " microseconds" << endl;
+
+    return 0;
+}
