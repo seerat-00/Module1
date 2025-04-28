@@ -46,7 +46,7 @@ void producer(int producer_id) {
              << timestamp << " " << signal_id << " " << cars_passed << " cars" << endl; //print the message
 
         queue_cv.notify_all(); //notify all the threads, queue has been updated
-        this_thread::sleep_for(chrono::milliseconds(100));  //sleeps for 100 ms for delay in producing data
+        this_thread::sleep_for(chrono::milliseconds(5000));  //sleeps for 100 ms for delay in producing data
     }
 
     unique_lock<mutex> lock(queue_mutex); //locks the queue mutex to ensure access
@@ -81,7 +81,7 @@ void consumer(int consumer_id) {
         cout << "[Consumer " << consumer_id << "] Processed <- " 
              << timestamp << " " << signal_id << " " << cars_passed << " cars" << endl; //print
 
-        this_thread::sleep_for(chrono::milliseconds(150));  //wait for 150 ms before processing again
+        this_thread::sleep_for(chrono::milliseconds(5000));  //wait for 150 ms before processing again
     }
 }
 
