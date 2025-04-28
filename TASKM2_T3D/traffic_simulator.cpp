@@ -62,6 +62,7 @@ void consumer(int consumer_id) {
 
         if (traffic_queue.empty() && done) {
             break;  
+        }
          //break the loop and stop execution if producers are done
 
         auto data = traffic_queue.front(); //retrive data from the queue 
